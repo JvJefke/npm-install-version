@@ -30,10 +30,10 @@ $ niv scott113341/csjs#some-branch --overwrite
 # overwrites the previously installed version there, which is useful if I just updated "some-branch"
 ```
 
-#### Full Usage
+#### Install
 
 ```usage
-usage: niv <package> [options...]
+usage: niv install <package> [options...]
 
 required:
 
@@ -59,6 +59,16 @@ optional:
     display this message
 ```
 
+#### Uninstall
+
+```usage
+usage: niv uninstall <package>
+
+required:
+
+  package
+    the package to be uninstalled
+```
 
 ## Programmatic Usage
 
@@ -84,6 +94,9 @@ const csjs_new = niv.require('csjs@1.0.1');
 
 benchmark([csjs_old, csjs_new], 'some-test-input');
 // run our fake benchmark function on the old and new versions of csjs
+
+niv.uninstall('csjs@1.0.0');
+// remove package from the node_modules
 ```
 
 #### Advanced Example
