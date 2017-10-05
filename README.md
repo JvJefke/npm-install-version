@@ -19,13 +19,13 @@ Install globally: `npm install npm-install-version -g`
 
 ```text
 $ niv csjs@1.0.0
-# installs csjs@1.0.0 to node_modules/csjs@1.0.0/
+# installs csjs@1.0.0 to niv_modules/csjs@1.0.0/
 
 $ niv csjs@1.0.0 --destination csjs-v1
-# installs csjs@1.0.0 to node_modules/csjs-v1/
+# installs csjs@1.0.0 to niv_modules/csjs-v1/
 
 $ niv scott113341/csjs#some-branch --overwrite
-# installs https://github.com/scott113341/csjs#some-branch to node_modules/scott113341-csjs#some-branch/
+# installs https://github.com/scott113341/csjs#some-branch to niv_modules/scott113341-csjs#some-branch/
 # notice how the installation directory is sanitized (the "/" is replaced with a "-")
 # overwrites the previously installed version there, which is useful if I just updated "some-branch"
 ```
@@ -44,7 +44,7 @@ required:
 optional:
 
   --destination, -d
-    the destination install directory inside node_modules/
+    the destination install directory inside niv_modules/
     default: sanitized <package>
 
   --overwrite, -o
@@ -83,10 +83,10 @@ const niv = require('npm-install-version');
 const benchmark = require('./some-benchmark-function.js');
 
 niv.install('csjs@1.0.0');
-// installs csjs@1.0.0 to node_modules/csjs@1.0.0/
+// installs csjs@1.0.0 to niv_modules/csjs@1.0.0/
 
 niv.install('csjs@1.0.1');
-// installs csjs@1.0.1 to node_modules/csjs@1.0.1/
+// installs csjs@1.0.1 to niv_modules/csjs@1.0.1/
 
 const csjs_old = niv.require('csjs@1.0.0');
 const csjs_new = niv.require('csjs@1.0.1');
@@ -96,7 +96,7 @@ benchmark([csjs_old, csjs_new], 'some-test-input');
 // run our fake benchmark function on the old and new versions of csjs
 
 niv.uninstall('csjs@1.0.0');
-// remove package from the node_modules
+// remove package from the niv_modules
 ```
 
 #### Advanced Example
@@ -105,13 +105,13 @@ niv.uninstall('csjs@1.0.0');
 const niv = require('npm-install-version');
 
 niv.install('csjs@1.0.0', { destination: 'some-dir' });
-// installs csjs@1.0.0 to node_modules/some-dir/
+// installs csjs@1.0.0 to niv_modules/some-dir/
 
 niv.install('csjs@1.0.1', { destination: 'some-dir' });
-// doesn't do anything because node_modules/some-dir/ already exists
+// doesn't do anything because niv_modules/some-dir/ already exists
 
 niv.install('csjs@1.0.1', { destination: 'some-dir', overwrite: true });
-// installs csjs@1.0.1 to node_modules/some-dir/, overwriting the existing install
+// installs csjs@1.0.1 to niv_modules/some-dir/, overwriting the existing install
 ```
 
 
