@@ -5,7 +5,7 @@ const shelljs = require('shelljs');
 const util = require('./util.js');
 
 const CWD = process.cwd();
-const TEMP = path.join(CWD, 'node_modules', '.npm-install-version-temp' + Math.random());
+const TEMP = path.join(CWD, 'niv_modules', '.npm-install-version-temp' + Math.random());
 
 function install (npmPackage, options = {}) {
   const {
@@ -17,7 +17,7 @@ function install (npmPackage, options = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
   if (!npmPackage) util.error();
-  const destinationPath = path.join(CWD, 'node_modules', destination);
+  const destinationPath = path.join(CWD, 'niv_modules', destination);
   if (!overwrite && util.directoryExists(destinationPath)) {
     return log(`Directory at ${destinationPath} already exists, skipping`);
   }
@@ -55,7 +55,7 @@ function install (npmPackage, options = {}) {
         shelljs.mv(from, to);
       });
 
-    // copy to node_modules/
+    // copy to niv_modules/
     shelljs.rm('-rf', destinationPath);
     shelljs.mv(path.join(TEMP, 'node_modules', packageName), destinationPath);
 
