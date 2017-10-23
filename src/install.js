@@ -70,7 +70,7 @@ function install (npmPackage, options = {}) {
     shelljs.rm('-rf', TEMP);
 
     if (errored) {
-      throw `Error installing ${npmPackage}`;
+      throw Error(`Error installing ${npmPackage}`);
     }
   });
 }
