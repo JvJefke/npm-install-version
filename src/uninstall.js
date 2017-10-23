@@ -14,6 +14,6 @@ module.exports = function(npmPackage, options = {}) {
   shelljs.rm("-rf", path.join(MODULES_DIRECTORY, sanitize(npmPackage)))
 
   if(shelljs.error() && !quiet) {
-    throw "Package not found!";
+    throw Error("Package not found!");
   }
 };
