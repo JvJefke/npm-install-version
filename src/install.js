@@ -25,15 +25,17 @@ function install (npmPackage, options = {}) {
   // get real package name
   const packageName = util.getPackageName(npmPackage);
 
-  let errored = false;
-
   return fse.remove(TEMP)
     // make temp install dir
     .then(() => fse.mkdirs(path.join(TEMP, 'node_modules')))
 
     // copy local .npmrc file if exists
-    .then(() => fse.exists(path.join(CWD, '.npmrc')))
-    .then(() => fse.copy(path.join(CWD, '.npmrc'), TEMP), Promise.resolve)
+    .then(() => fse.pathExists(path.join(CWD, '.npmrc')))
+    .then((npmrcExists) => {
+      if (npmrcExists) {
+        return fse.copy(path.join(CWD, '.npmrc'), path.join(TEMP, ".npmrc"))
+      }
+    })
 
     // install package to temp dir
     .then(() => {
@@ -43,17 +45,28 @@ function install (npmPackage, options = {}) {
       };
       const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-      return utils.cbToPromise(childProcess.spawn(command, ['install', npmPackage], installOptions));
+      return new Promise((resolve, reject) => {
+        const ps = childProcess.exec([command, 'install', npmPackage].join(" "), installOptions);
+
+        ps.stdout.on("data", (data) => console.log(data));
+        ps.stderr.on("data", (data) => console.error(data));
+        ps.on("close", (code) => {
+            if(code !== 0) {
+              return reject(`npm install process exited with code ${code}`)
+            }
+            resolve();
+          });
+      });
     })
 
     // move deps inside package
     .then(() => fse.mkdirs(path.join(TEMP, 'node_modules', packageName, 'node_modules')))
     .then(() => {
       const from = path.join(TEMP, 'node_modules');
-      const to = path.join(TEMP, 'node_modules', packageName, 'node_modules', dep);
-      const filterRegex = new RexExp("/^" + packageName + "&/");
+      const to = path.join(TEMP, 'node_modules', packageName, 'node_modules');
+      const filterRegex = new RegExp("^" + path.join(TEMP, 'node_modules', packageName));
       const filter = (src, dest) => {
-        return src.match(filterRegex);
+        return !src.match(filterRegex);
       }
 
       return fse.copy(from, to, { filter });
@@ -69,7 +82,7 @@ function install (npmPackage, options = {}) {
       () => log(`Installed ${npmPackage} to ${destinationPath}`),
       error => {
         console.error(`Error installing ${npmPackage}`);
-        console.error(err.toString());
+        console.error(error.toString());
 
         throw Error(`Error installing ${npmPackage}`);
       }

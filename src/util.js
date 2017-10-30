@@ -35,18 +35,6 @@ function sanitize (npmPackage) {
   return sanitizeFilename(npmPackage, { replacement: '-' });
 }
 
-function cbToPromise (func) {
-  return new Promise(function(resolve, reject) {
-      func(function(err, data) {
-        if(err) {
-          return reject(err);
-        }
-
-        return resolve(data);
-      });
-  })
-}
-
 function tryCatchOptimizer (fn, errorFn, finalFn) {
   var safeCallFunction = (fn, ...params) => {
     if(typeof fn === "function") {
