@@ -38,8 +38,11 @@ if (args._.length > 1) {
     process.exit(0);
   }
   if(args._[0] === "install") {
-    niv.install(args._[1], args);
-    process.exit(0);
+    niv.install(args._[1], args)
+    .then(
+      () => process.exit(0),
+      () => process.exit(1)
+    );
   }
 }
 
