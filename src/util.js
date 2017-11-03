@@ -35,7 +35,7 @@ function sanitize (npmPackage) {
   return sanitizeFilename(npmPackage, { replacement: '-' });
 }
 
-function tryCatchOptimizer(fn, errorFn, finalFn) {
+function tryCatchOptimizer (fn, errorFn, finalFn) {
   var safeCallFunction = (fn, ...params) => {
     if(typeof fn === "function") {
       fn(...params);

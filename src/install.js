@@ -1,6 +1,6 @@
 const childProcess = require('child_process');
 const path = require('path');
-const shelljs = require('shelljs');
+const fse = require("fs-extra");
 
 const util = require('./util.js');
 
@@ -22,57 +22,71 @@ function install (npmPackage, options = {}) {
     return log(`Directory at ${destinationPath} already exists, skipping`);
   }
 
-  let errored = false;
+  // get real package name
+  const packageName = util.getPackageName(npmPackage);
 
-  util.tryCatchOptimizer(function() {
-     // make temp install dir
-     shelljs.rm('-rf', TEMP);
-     shelljs.mkdir('-p', path.join(TEMP, 'node_modules'));
+  return fse.remove(TEMP)
+    // make temp install dir
+    .then(() => fse.mkdirs(path.join(TEMP, 'node_modules')))
 
-     // copy local .npmrc file if exists
-     const npmrcFile = path.join(CWD, '.npmrc');
-     if (shelljs.test('-f', npmrcFile)) {
-       shelljs.cp(npmrcFile, TEMP);
-     }
+    // copy local .npmrc file if exists
+    .then(() => fse.pathExists(path.join(CWD, '.npmrc')))
+    .then((npmrcExists) => {
+      if (npmrcExists) {
+        return fse.copy(path.join(CWD, '.npmrc'), path.join(TEMP, ".npmrc"))
+      }
+    })
 
-     // install package to temp dir
-     const installOptions = {
-       cwd: TEMP,
-       stdio: [null, null, null]
-     };
-     const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-     childProcess.spawnSync(command, ['install', npmPackage], installOptions);
+    // install package to temp dir
+    .then(() => {
+      const installOptions = {
+        cwd: TEMP,
+        stdio: [null, null, null]
+      };
+      const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-     // get real package name
-     const packageName = util.getPackageName(npmPackage);
+      return new Promise((resolve, reject) => {
+        const ps = childProcess.exec([command, 'install', npmPackage].join(" "), installOptions);
 
-     // move deps inside package
-     shelljs.mkdir('-p', path.join(TEMP, 'node_modules', packageName, 'node_modules'));
-     shelljs.ls(path.join(TEMP, 'node_modules'))
-       .forEach(dep => {
-         if (dep === packageName) return;
-         const from = path.join(TEMP, 'node_modules', dep).toString();
-         const to = path.join(TEMP, 'node_modules', packageName, 'node_modules', dep).toString();
-         shelljs.mv(from, to);
-       });
+        ps.stdout.on("data", (data) => console.log(data));
+        ps.stderr.on("data", (data) => console.error(data));
+        ps.on("close", (code) => {
+            if(code !== 0) {
+              return reject(`npm install process exited with code ${code}`)
+            }
+            resolve();
+          });
+      });
+    })
 
-     // copy to niv_modules/
-     shelljs.rm('-rf', destinationPath);
-     shelljs.mv(path.join(TEMP, 'node_modules', packageName), destinationPath);
+    // move deps inside package
+    .then(() => fse.mkdirs(path.join(TEMP, 'node_modules', packageName, 'node_modules')))
+    .then(() => {
+      const from = path.join(TEMP, 'node_modules');
+      const to = path.join(TEMP, 'node_modules', packageName, 'node_modules');
+      const filterRegex = new RegExp("^" + path.join(TEMP, 'node_modules', packageName));
+      const filter = (src, dest) => {
+        return !src.match(filterRegex);
+      }
 
-     log(`Installed ${npmPackage} to ${destinationPath}`);
-  }, function onError(error) {
-    errored = true;
-    console.error(`Error installing ${npmPackage}`);
-    console.error(err.toString());
-  }, function final() {
-    // clean up temp install dir
-    shelljs.rm('-rf', TEMP);
+      return fse.copy(from, to, { filter });
+    })
 
-    if (errored) {
-      throw Error(`Error installing ${npmPackage}`);
-    }
-  });
+    // copy to niv_modules/
+    .then(() => fse.remove(destinationPath))
+    .then(() => fse.move(path.join(TEMP, 'node_modules', packageName), destinationPath))
+
+    // cleanup
+    .then(() => fse.remove(TEMP))
+    .then(
+      () => log(`Installed ${npmPackage} to ${destinationPath}`),
+      error => {
+        console.error(`Error installing ${npmPackage}`);
+        console.error(error.toString());
+
+        throw Error(`Error installing ${npmPackage}`);
+      }
+    );
 }
 
 module.exports = install;
