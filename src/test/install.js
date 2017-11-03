@@ -4,6 +4,8 @@ const test = require('tape');
 const niv = require('../index.js');
 const { clean } = require('./test-util.js');
 
+// TODO: Test cleanup & test dependencies
+
 test('niv.install normal', t => {
   clean();
 
