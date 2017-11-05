@@ -49,7 +49,7 @@ function install (npmPackage, options = {}) {
         const ps = childProcess.exec([command, 'install', npmPackage].join(" "), installOptions);
 
         ps.stdout.on("data", (data) => log(data));
-        ps.stderr.on("data", (data) => console.error(data));
+        ps.stderr.on("data", (data) => log(data));
         ps.on("close", (code) => {
             if(code !== 0) {
               return reject(`npm install process exited with code ${code}`)
