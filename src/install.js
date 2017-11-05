@@ -48,7 +48,7 @@ function install (npmPackage, options = {}) {
       return new Promise((resolve, reject) => {
         const ps = childProcess.exec([command, 'install', npmPackage].join(" "), installOptions);
 
-        ps.stdout.on("data", (data) => console.log(data));
+        ps.stdout.on("data", (data) => log(data));
         ps.stderr.on("data", (data) => console.error(data));
         ps.on("close", (code) => {
             if(code !== 0) {
