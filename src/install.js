@@ -23,9 +23,13 @@ function install (npmPackage, options = {}) {
   }
 
   // get real package name
-  const packageName = util.getPackageName(npmPackage);
-
-  return fse.remove(TEMP)
+  let packageName;
+  
+  return util.getPackageName(npmPackage)
+    .then(function(result) {
+      packageName = result;
+    })
+    .then(() => fse.remove(TEMP))
     // make temp install dir
     .then(() => fse.mkdirs(path.join(TEMP, 'node_modules')))
 

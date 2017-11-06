@@ -1,4 +1,3 @@
-const deasync = require('deasync');
 const fs = require('fs');
 const npm = require('npm');
 const path = require('path');
@@ -17,12 +16,24 @@ function error () {
   throw Error('You must specify an install target like this: csjs@1.0.0');
 }
 
-function getPackageName (packageName) {
-  const load = deasync(npm.load);
-  load({ loaded: false });
+function getPackageName(packageName) {
+  return new Promise(function(resolve, reject) {
+    npm.load({ loaded: false }, function(err, result) {
+        if(err) {
+          return reject(err);
+        }
 
-  const fetchPackageMetadata = deasync(require('npm/lib/fetch-package-metadata.js'));
-  return fetchPackageMetadata(packageName, process.cwd()).name;
+        var fetchPackageMeta = require('npm/lib/fetch-package-metadata.js');
+
+        fetchPackageMeta(packageName, process.cwd(), function(err, result) {
+          if(err) {
+            return reject(err);
+          }
+
+          return resolve(result.name);
+        });
+    });
+  });
 }
 
 function getUsage () {
